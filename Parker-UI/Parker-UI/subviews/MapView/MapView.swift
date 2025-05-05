@@ -6,19 +6,15 @@
 //
 
 import SwiftUI
-
+import MapKit
 struct MapView: View {
-
+    
     var body: some View {
-        VStack {
-            Image("FakeMapForPlaceholder")
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .ignoresSafeArea()
-            
+        Map() {
+            Marker("Meter", coordinate: CLLocationCoordinate2D(latitude: 37.3318, longitude: -121.8863))
         }
-        
     }
+    
 }
 
 #Preview {

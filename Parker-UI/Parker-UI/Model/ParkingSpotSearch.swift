@@ -6,3 +6,7 @@
 //
 
 import Foundation
+
+struct ParkingSpotSearch: Decodable {
+    var parkingSpots = [ParkingSpot]()
+}
