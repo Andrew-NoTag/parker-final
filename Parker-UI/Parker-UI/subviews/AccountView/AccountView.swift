@@ -1,269 +1,247 @@
-//
-//  SearchView.swift
-//  Parker-UI
-//
-//  Created by Gerald Zhao on 3/11/25.
-//
+
 
 import SwiftUI
 
+//--------------------------------------------------------------
+//  AccountView.swift
+//  Uses DataService.login & DataService.signUp for auth.
+//--------------------------------------------------------------
 
 struct AccountView: View {
-    // Persistent storage
-    @AppStorage("isSignedUp")  private var isSignedUp:  Bool   = false // account exists
-    @AppStorage("isLoggedIn") private var isLoggedIn: Bool   = false // session state
+    // Persisted user session / profile
+    @AppStorage("isLoggedIn") private var isLoggedIn = false
     @AppStorage("phoneNumber") private var phoneNumber: String = ""
-    @AppStorage("passcode")    private var passcode:   String = ""
-    @AppStorage("credits")     private var credits:    Int    = 0
+    @AppStorage("credits")     private var credits: Int = 0
 
     // Local state for auth forms
-    @State private var authPhone:    String = ""
-    @State private var authPasscode: String = ""
-    @State private var showSignUp:   Bool   = false
-    @State private var showLoginError: Bool = false
+    @State private var inputPhone: String = ""
+    @State private var inputPass:  String = ""
+    @State private var showSignUp = false
+
+    // Feedback / loading
+    @State private var isSubmitting = false
+    @State private var alertMessage = ""
+    
     @State private var showCreditsInfo = false
+
+    private let service = DataService()  // networking layer
+    
+    @State private var showAlert = false
 
     var body: some View {
         NavigationStack {
             if isLoggedIn {
-                AccountScreen
+                accountScreen
             } else if showSignUp {
-                SignUpForm
-                    .navigationTitle("Create Account")
-                    .navigationBarTitleDisplayMode(.inline)
+                signUpForm
             } else {
-                LoginForm
-                    .navigationTitle("Sign In")
-                    .navigationBarTitleDisplayMode(.inline)
+                loginForm
             }
         }
-        .alert("Invalid credentials", isPresented: $showLoginError) {
-            Button("OK", role: .cancel) { }
+        .alert(alertMessage, isPresented: $showAlert) { Button("OK", role: .cancel) { } }
+        .alert("How Credits Work", isPresented: $showCreditsInfo) {
+            Button("Got it", role: .cancel) { }
+        } message: {
+            Text("Each availability report rewards 50 credits. Users with 100+ credits can view others' availability reports.")
+        }
+        
+    }
+
+    //----------------------------------------------------------
+    // MARK: - Login Form
+    //----------------------------------------------------------
+    private var loginForm: some View {
+        formContainer(title: "Sign In", systemImage: "person.crop.circle") {
+            authFields
+            authButton(label: "Sign In") {
+                await performLogin()
+            }
+            Button("Need an account? Sign Up") { showSignUp = true }
+                .font(.subheadline)
         }
     }
 
-    // MARK: ‑ Login Form
-    private var LoginForm: some View {
-        VStack(spacing: 24) {
-            Image(systemName: "person.crop.circle")
-                .font(.system(size: 64))
-                .padding(.top, 40)
-                .foregroundColor(.accentColor)
-
-            VStack(spacing: 16) {
-                TextField("Phone Number", text: $authPhone)
-                    .keyboardType(.phonePad)
-                    .textFieldStyle(.roundedBorder)
-                SecureField("Passcode", text: $authPasscode)
-                    .textFieldStyle(.roundedBorder)
-            }
-            .padding(.horizontal)
-
-            Button {
-                if authPhone == phoneNumber && authPasscode == passcode && isSignedUp {
-                    isLoggedIn = true
-                    authPhone = ""
-                    authPasscode = ""
-                } else {
-                    showLoginError = true
-                }
-            } label: {
-                Text("Sign In")
-                    .fontWeight(.semibold)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(authPhone.isEmpty || authPasscode.isEmpty ? Color.gray.opacity(0.4) : Color.accentColor)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-            }
-            .disabled(authPhone.isEmpty || authPasscode.isEmpty)
-            .padding(.horizontal)
-
-            Button {
-                showSignUp = true
-            } label: {
-                Text("Need an account? Sign Up")
-                    .font(.subheadline)
-            }
-            .padding(.top, 8)
-            Spacer()
-        }
-    }
-
+    //----------------------------------------------------------
     // MARK: - Sign‑Up Form
-    private var SignUpForm: some View {
-        VStack(spacing: 24) {
-            Image(systemName: "person.crop.circle.badge.plus")
-                .font(.system(size: 64))
-                .padding(.top, 40)
-                .foregroundColor(.accentColor)
-
-            VStack(spacing: 16) {
-                TextField("Phone Number", text: $authPhone)
-                    .keyboardType(.phonePad)
-                    .textFieldStyle(.roundedBorder)
-                SecureField("Passcode", text: $authPasscode)
-                    .textFieldStyle(.roundedBorder)
+    //----------------------------------------------------------
+    private var signUpForm: some View {
+        formContainer(title: "Create Account", systemImage: "person.crop.circle.badge.plus") {
+            authFields
+            authButton(label: "Create Account") {
+                await performSignUp()
             }
-            .padding(.horizontal)
-
-            Button {
-                phoneNumber = authPhone
-                passcode    = authPasscode
-                credits     = 0
-                isSignedUp  = true
-                isLoggedIn  = true
-                showSignUp  = false
-                authPhone = ""
-                authPasscode = ""
-            } label: {
-                Text("Create Account")
-                    .fontWeight(.semibold)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(authPhone.isEmpty || authPasscode.isEmpty ? Color.gray.opacity(0.4) : Color.accentColor)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-            }
-            .disabled(authPhone.isEmpty || authPasscode.isEmpty)
-            .padding(.horizontal)
-
-            Button {
-                showSignUp = false
-            } label: {
-                Text("Back to Sign In")
-                    .font(.subheadline)
-            }
-            .padding(.top, 8)
-            Spacer()
+            Button("Back to Sign In") { showSignUp = false }
+                .font(.subheadline)
         }
     }
 
-    // MARK: - Main Account Screen
-    private var AccountScreen: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                // Big Credits Card
-                ZStack {
-                    RoundedRectangle(cornerRadius: 20)
-                        .fill(Color.accentColor.opacity(0.15))
-                        .frame(height: 150)
-                    VStack(spacing: 8) {
-                        Text("Credits")
-                            .font(.headline)
-                            .foregroundColor(.accentColor)
-                        HStack(spacing: 6) {
-                            Text("\(credits)")
-                                .font(.system(size: 48, weight: .bold))
-                            Button {
-                                showCreditsInfo = true
-                            } label: {
-                                Image(systemName: "questionmark.circle")
-                                    .font(.title3)
-                                    .foregroundColor(.accentColor)
-                            }
+    //----------------------------------------------------------
+    // MARK: - Reusable auth fields & button
+    //----------------------------------------------------------
+    private var authFields: some View {
+        VStack(spacing: 16) {
+            TextField("Phone Number", text: $inputPhone)
+                .keyboardType(.phonePad)
+                .textFieldStyle(.roundedBorder)
+            SecureField("Passcode", text: $inputPass)
+                .textFieldStyle(.roundedBorder)
+        }
+        .padding(.horizontal)
+    }
+
+    @ViewBuilder
+    private func authButton(label: String, action: @escaping () async -> Void) -> some View {
+        Button {
+            Task { await action() }
+        } label: {
+            if isSubmitting {
+                ProgressView().frame(maxWidth: .infinity).padding()
+            } else {
+                Text(label)
+                    .fontWeight(.semibold)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+            }
+        }
+        .background(inputPhone.isEmpty || inputPass.isEmpty || isSubmitting ? Color.gray.opacity(0.4) : Color.accentColor)
+        .foregroundColor(.white)
+        .cornerRadius(12)
+        .disabled(inputPhone.isEmpty || inputPass.isEmpty || isSubmitting)
+        .padding(.horizontal)
+    }
+
+    //----------------------------------------------------------
+    // MARK: - Account screen
+    //----------------------------------------------------------
+    var accountScreen: some View {
+    VStack(spacing: 24) {
+        Text("My Account")
+            .font(.largeTitle)
+            .foregroundColor(.black)
+            .bold()
+        Rectangle().foregroundStyle(.white)
+            .frame(width: 10,height: 1)
+        // Big credits card
+        RoundedRectangle(cornerRadius: 20)
+            .fill(Color.accentColor.opacity(0.15))
+            .frame(height: 150)
+            .overlay(
+                VStack {
+                    HStack {
+                        Text("Credits").font(.headline).foregroundColor(.accentColor)
+                        Button {
+                            showAlert = true
+                            
+                        } label:{
+                            Image(systemName: "questionmark.circle").font(.title3).foregroundColor(.accentColor)
+                        }
+                        .alert(isPresented: $showAlert) {
+                            Alert(
+                                title: Text("How Credits Work"),
+                                message: Text("Each report of availabilities gives you 50 credits. Only users with 100 or more credits can see other users' reports."),
+                                dismissButton: .default(Text("OK"))
+                            )
                         }
                     }
+                    Text("\(credits)").font(.system(size: 48, weight: .bold))
                 }
-                .padding(.horizontal)
-                .alert("How Credits Work", isPresented: $showCreditsInfo) {
-                    Button("Got it", role: .cancel) { }
-                } message: {
-                    Text("Each availability report rewards 50 credits. Users with 100+ credits can view others' availability reports.")
-                }
+            )
+            .padding(.horizontal)
 
-                // Rest of settings list
-                settingsList
-            }
-            .padding(.top)
-        }
-        .navigationTitle("My Account")
-        .navigationBarTitleDisplayMode(.inline)
-    }
-
-    // MARK: - Settings List
-    private var settingsList: some View {
         List {
-            // Account details (phone)
             Section(header: Text("Account")) {
                 HStack {
-                    Image(systemName: "phone")
-                        .foregroundColor(.accentColor)
+                    Image(systemName: "phone").foregroundColor(.accentColor)
                     Text("Phone")
                     Spacer()
-                    Text(phoneNumber)
-                        .foregroundColor(.secondary)
-                }
-            }
-
-            // Security section
-            Section(header: Text("Security")) {
-                NavigationLink(destination: ChangePasscodeView()) {
-                    Label("Change Passcode", systemImage: "key.fill")
-                }
-            }
-
-            // Logout
-            Section {
-                Button(role: .destructive) {
-                    logout()
-                } label: {
-                    HStack {
-                        Spacer()
-                        Text("Log Out")
-                        Spacer()
-                    }
+                    Text(phoneNumber).foregroundColor(.secondary)
                 }
             }
         }
-        .frame(height: 350) // constrain list height so content scrolls nicely
+        .listStyle(.insetGrouped)
+        
+        List {
+            Section {
+                Button(role: .destructive) { logout() } label: {
+                    HStack { Spacer(); Text("Log Out"); Spacer() }
+                }
+            }
+        }
         .listStyle(.insetGrouped)
     }
+    .navigationTitle("My Account")
+    .navigationBarTitleDisplayMode(.inline)
+}
 
-    // MARK: - Helpers
+    //----------------------------------------------------------
+    // MARK: - Network calls
+    //----------------------------------------------------------
+    private func performLogin() async {
+        isSubmitting = true
+        do {
+            let resp = try await service.login(phone: inputPhone, passcode: inputPass)
+            guard resp.success else { throw URLError(.userAuthenticationRequired) }
+            credits = resp.credits ?? credits
+            phoneNumber = inputPhone
+            isLoggedIn = true
+            clearFields()
+        } catch {
+            alertMessage = "Login failed: \(error.localizedDescription)"
+        }
+        isSubmitting = false
+    }
+
+    private func performSignUp() async {
+        isSubmitting = true
+        do {
+            let resp = try await service.signUp(phone: inputPhone, passcode: inputPass)
+            guard resp.success else { throw URLError(.badServerResponse) }
+            credits = resp.credits ?? 0
+            phoneNumber = inputPhone
+            isLoggedIn = true
+            showSignUp = false
+            clearFields()
+        } catch {
+            alertMessage = "Sign‑Up failed: \(error.localizedDescription)"
+        }
+        isSubmitting = false
+    }
+
+    private func clearFields() {
+        inputPhone = ""; inputPass = ""
+    }
+
     private func logout() {
         isLoggedIn = false
-        authPhone   = ""
-        authPasscode = ""
+        clearFields()
     }
-}
 
-// MARK: - Deep Passcode View
-struct ChangePasscodeView: View {
-    @AppStorage("passcode") private var passcode: String = ""
-    @State private var newPasscode: String = ""
-    @State private var confirmPasscode: String = ""
-    @State private var showMismatchAlert = false
-
-    var body: some View {
-        Form {
-            Section(header: Text("Enter New Passcode")) {
-                SecureField("New Passcode", text: $newPasscode)
-                SecureField("Confirm Passcode", text: $confirmPasscode)
-            }
-            Section {
-                Button("Update Passcode") {
-                    if newPasscode == confirmPasscode && !newPasscode.isEmpty {
-                        passcode = newPasscode
-                        newPasscode = ""
-                        confirmPasscode = ""
-                    } else {
-                        showMismatchAlert = true
-                    }
-                }
-                .disabled(newPasscode.isEmpty || confirmPasscode.isEmpty)
-            }
+    //----------------------------------------------------------
+    // MARK: - Reusable form container with icon
+    //----------------------------------------------------------
+    @ViewBuilder
+    private func formContainer(title: String, systemImage: String, @ViewBuilder content: () -> some View) -> some View {
+        VStack(spacing: 24) {
+            Image(systemName: systemImage)
+                .font(.system(size: 64))
+                .padding(.top, 40)
+                .foregroundColor(.accentColor)
+            content()
+            Spacer()
         }
-        .listStyle(.insetGrouped)
-        .navigationTitle("Change Passcode")
+        .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
-        .alert("Passcodes do not match", isPresented: $showMismatchAlert) {
-            Button("OK", role: .cancel) { }
-        }
     }
 }
 
+//--------------------------------------------------------------
+//  Preview
+//--------------------------------------------------------------
 
 #Preview {
-    AccountView().environment(ParkingSpotModel())
+    AccountView()
+}
+
+#Preview {
+    AccountView().accountScreen
 }

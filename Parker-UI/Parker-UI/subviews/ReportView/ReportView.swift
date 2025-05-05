@@ -81,5 +81,5 @@ struct ReportView: View {
 
 
 #Preview {
-    ReportView()
+    ReportView().environment(ParkingSpotModel())
 }
