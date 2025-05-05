@@ -7,6 +7,7 @@
 
 import Foundation
 import CoreLocation
+import CryptoKit
 
 struct DataService {
     
@@ -59,6 +60,50 @@ struct DataService {
             throw URLError(.badServerResponse)
         }
     }
+    
+    // MARK: - Auth Response ---------------------------------------------------------
+        struct AuthResponse: Decodable {
+            let success: Bool
+            let credits: Int?
+        }
+
+        // MARK: - Sign‑Up & Login helpers ----------------------------------------------
+        /// Convenience: hash passcode → SHA‑256 hex string
+        private func hash(_ text: String) -> String {
+            let hash = SHA256.hash(data: Data(text.utf8))
+            return hash.map { String(format: "%02x", $0) }.joined()
+        }
+
+        /// Build a URLRequest for auth endpoints with hashed passcode in URL.
+        private func authRequest(endpoint: String, phone: String, passcode: String) throws -> URLRequest {
+            let passHash = hash(passcode)
+            let phoneHash = hash(phone)
+            let urlString = "http://localhost:8000/\(endpoint)?phone=\(phoneHash)&passhash=\(passHash)"
+            guard let url = URL(string: urlString) else { throw URLError(.badURL) }
+            var req = URLRequest(url: url)
+            req.httpMethod = "POST"   // use POST even though params are in URL
+            return req
+        }
+
+        // MARK: - User sign‑up ----------------------------------------------------------
+        func signUp(phone: String, passcode: String) async throws -> AuthResponse {
+            let req = try authRequest(endpoint: "signup", phone: phone, passcode: passcode)
+            let (data, resp) = try await URLSession.shared.data(for: req)
+            guard let http = resp as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+                throw URLError(.badServerResponse)
+            }
+            return try JSONDecoder().decode(AuthResponse.self, from: data)
+        }
+
+        // MARK: - User login ------------------------------------------------------------
+        func login(phone: String, passcode: String) async throws -> AuthResponse {
+            let req = try authRequest(endpoint: "login", phone: phone, passcode: passcode)
+            let (data, resp) = try await URLSession.shared.data(for: req)
+            guard let http = resp as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+                throw URLError(.badServerResponse)
+            }
+            return try JSONDecoder().decode(AuthResponse.self, from: data)
+        }
     
 }
 
