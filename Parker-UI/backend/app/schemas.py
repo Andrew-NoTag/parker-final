@@ -57,8 +57,7 @@ class CombinedLotSchema(BaseModel):
 """users"""
 class UserBase(BaseModel):
     id: str
-    name: str
-    email: str
+    password_hash: str
     credits: int
 
     class Config:
@@ -66,10 +65,18 @@ class UserBase(BaseModel):
 
 
 class UserCreate(BaseModel):
-    name: str
-    email: str
-    password: str
+    id: str  # Use `id` for registration
+    password: str  # Plaintext password for registration
 
 
-class User(UserBase):
-    pass
+class UserLogin(BaseModel):
+    id: str  # Use `id` for login
+    password: str  # Plaintext password for login
+
+
+class UserResponse(BaseModel):
+    id: str
+    credits: int
+
+    class Config:
+        from_attributes = True
