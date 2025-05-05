@@ -33,6 +33,8 @@ struct MapView: View {
             switch parkingSpot.status {
             case "available":
                 return .green
+            case "restricted":
+                return .yellow
             default:
                 return .gray
             }
