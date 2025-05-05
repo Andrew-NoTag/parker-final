@@ -15,6 +15,7 @@ import CoreLocation
  
  Created by Gerald Zhao on 3/2/25
  */
+
 struct MainView: View {
     var body: some View {
         TabView {
@@ -28,11 +29,11 @@ struct MainView: View {
                 .tag(0)
             
             // 2) Search Tab
-            SearchView()
+            ListView()
                 .tabItem {
-                    Image(systemName: "magnifyingglass")
+                    Image(systemName: "list.bullet.rectangle.portrait")
                         .shadow(radius: 20)
-                    Text("Search")
+                    Text("List")
                 }
                 .tag(1)
             
@@ -45,10 +46,10 @@ struct MainView: View {
                 .tag(2)
             
             // 4) Account Tab
-            AccountView()
+            ReportView()
                 .tabItem {
-                    Image(systemName: "person")
-                    Text("Account")
+                    Image(systemName: "plus.circle.fill")
+                    Text("Report a Spot")
                 }
                 .tag(3)
         }

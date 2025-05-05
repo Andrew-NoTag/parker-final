@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct SearchView: View {
+struct ListView: View {
     var body: some View {
         VStack {
             Text("Search something!")
@@ -18,5 +18,5 @@ struct SearchView: View {
 }
 
 #Preview {
-    SearchView()
+    ListView()
 }

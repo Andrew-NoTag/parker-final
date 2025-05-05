@@ -9,9 +9,16 @@ import SwiftUI
 
 @main
 struct Parker_UIApp: App {
+    
+    @State var model = ParkingSpotModel()
+    
     var body: some Scene {
         WindowGroup {
             MainView()
+                .environment(model)
+                .onAppear() {
+                    model.getUserLocation()
+                }
         }
     }
 }
