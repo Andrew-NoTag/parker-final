@@ -1,5 +1,6 @@
 from .database import Base
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
 
 class ParkingLot(Base):
     __tablename__ = "parking_lots"
@@ -20,3 +21,13 @@ class BlockRestriction(Base):
     start_time = Column(String, nullable=False)  # e.g., "08:00"
     end_time = Column(String, nullable=False)  # e.g., "18:00"
     time_limit_minutes = Column(Integer, nullable=True)  # Optional time limit in minutes
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(String, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    email = Column(String, unique=True, nullable=False)
+    password_hash = Column(String, nullable=False)
+    credits = Column(Integer, default=0)
+

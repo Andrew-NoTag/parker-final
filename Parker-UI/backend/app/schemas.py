@@ -53,3 +53,23 @@ class CombinedLotSchema(BaseModel):
     start_time: Optional[str]
     end_time: Optional[str]
     time_limit_minutes: Optional[int]
+
+"""users"""
+class UserBase(BaseModel):
+    id: str
+    name: str
+    email: str
+    credits: int
+
+    class Config:
+        from_attributes = True
+
+
+class UserCreate(BaseModel):
+    name: str
+    email: str
+    password: str
+
+
+class User(UserBase):
+    pass

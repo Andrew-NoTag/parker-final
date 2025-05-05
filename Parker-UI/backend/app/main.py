@@ -69,7 +69,7 @@ def get_closest_parking_lots(
         })
     return result
 
-@app.put("/update-parking-status", response_model=schemas.ParkingLot)
+@app.put("/update-parking-status", response_model=dict)
 def update_parking_status(
     latitude: float = Query(..., description="Latitude of the user's location"),
     longitude: float = Query(..., description="Longitude of the user's location"),
@@ -91,9 +91,17 @@ def update_parking_status(
         raise HTTPException(status_code=404, detail="No parking lot found")
 
     # Update the status to available
-    closest_parking_lot.status = "available"  # Assuming there's a `status` column in the `ParkingLot` model
+    closest_parking_lot.status = "available"
     db.commit()
     db.refresh(closest_parking_lot)
 
-    return closest_parking_lot
+    return {
+        "parking_lot": {
+            "id": closest_parking_lot.id,
+            "street_name": closest_parking_lot.street_name,
+            "latitude": closest_parking_lot.latitude,
+            "longitude": closest_parking_lot.longitude,
+            "status": closest_parking_lot.status,
+        }
+    }
 

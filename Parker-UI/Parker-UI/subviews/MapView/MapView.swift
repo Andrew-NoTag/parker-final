@@ -40,43 +40,61 @@ struct MapView: View {
     }
 
     private func canParkNow(for parkingSpot: ParkingSpot) -> Bool {
-        guard let day = parkingSpot.day,
-              let startTime = parkingSpot.start_time,
-              let endTime = parkingSpot.end_time else {
-            return true // Allow parking if any restriction data is missing
-        }
-
-        let currentDate = Date()
-        let calendar = Calendar.current
-
-        // Get the current day of the week in three-letter format (e.g., "Mon", "Tue")
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "EEE" // Abbreviated day format
-        let currentDay = dateFormatter.string(from: currentDate)
-
-        // Check if the current day matches the restriction day
-        guard currentDay == day else {
-            return true // Allow parking if it's not the restricted day
-        }
-
-        // Parse start and end times (format: HH:mm:ss)
-        dateFormatter.dateFormat = "HH:mm:ss"
-
-        guard let start = dateFormatter.date(from: startTime),
-              let end = dateFormatter.date(from: endTime) else {
-            return true // Allow parking if time parsing fails
-        }
-
-        // Get the current time
-        let currentTime = calendar.dateComponents([.hour, .minute, .second], from: currentDate)
-        let current = dateFormatter.date(from: "\(currentTime.hour!):\(currentTime.minute!):\(currentTime.second!)")!
-
-        if current < start || current > end {
-            return false // Return false if parking is outside the allowed range
-        }
-
-        return true // Allow parking if the current time is within the allowed range
+    guard let day = parkingSpot.day,
+          let startTime = parkingSpot.start_time,
+          let endTime = parkingSpot.end_time else {
+        return true
     }
+
+    let currentDate = Date()
+    let calendar = Calendar.current
+
+    // Get current day abbreviation
+    let dateFormatter = DateFormatter()
+    dateFormatter.dateFormat = "EEE"
+    let currentDay = dateFormatter.string(from: currentDate)
+
+    // Check if today is a restricted day
+    guard currentDay == day else {
+        return true
+    }
+
+    // Parse start and end time strings into components
+    func timeStringToComponents(_ timeStr: String) -> DateComponents? {
+        let parts = timeStr.split(separator: ":").map { Int($0) }
+        guard parts.count == 3,
+              let hour = parts[0], let minute = parts[1], let second = parts[2] else {
+            return nil
+        }
+        return DateComponents(hour: hour, minute: minute, second: second)
+    }
+
+    guard let startComponents = timeStringToComponents(startTime),
+          let endComponents = timeStringToComponents(endTime) else {
+        return true
+    }
+
+    let nowComponents = calendar.dateComponents([.hour, .minute, .second], from: currentDate)
+
+    // Convert all components to seconds since midnight
+    func toSeconds(_ components: DateComponents) -> Int {
+        return (components.hour ?? 0) * 3600 +
+               (components.minute ?? 0) * 60 +
+               (components.second ?? 0)
+    }
+
+    let nowSec = toSeconds(nowComponents)
+    let startSec = toSeconds(startComponents)
+    let endSec = toSeconds(endComponents)
+
+    // Return false if we are in restricted time
+    if nowSec >= startSec && nowSec <= endSec {
+        return false
+    }
+
+    return true
+}
+
 }
 
 #Preview {

@@ -10,7 +10,7 @@ import SwiftUI
 import CoreLocation
 
 @Observable
-class ParkingSpotModel: NSObject, CLLocationManagerDelegate {
+class ParkingSpotModel: NSObject, CLLocationManagerDelegate, ObservableObject {
     
     var parkingSpots = [ParkingSpot]()
     var selectedParkingSpot: ParkingSpot?

@@ -48,17 +48,17 @@ struct DataService {
     }
     
     func reportOpenSpot(latitude: Double, longitude: Double) async throws {
-            let endpoint = "http://localhost:8000/report-open-spot?latitude=\(latitude)&longitude=\(longitude)"
-            guard let url = URL(string: endpoint) else { throw URLError(.badURL) }
+        let endpoint = "http://localhost:8000/update-parking-status?latitude=\(latitude)&longitude=\(longitude)"
+        guard let url = URL(string: endpoint) else { throw URLError(.badURL) }
 
-            var request = URLRequest(url: url)
-            request.httpMethod = "POST" // backend may still expect POST even though params are in URL
+        var request = URLRequest(url: url)
+        request.httpMethod = "PUT"
 
-            let (_, response) = try await URLSession.shared.data(for: request)
-            if let httpRes = response as? HTTPURLResponse, !(200...299).contains(httpRes.statusCode) {
-                throw URLError(.badServerResponse)
-            }
+        let (_, response) = try await URLSession.shared.data(for: request)
+        if let httpRes = response as? HTTPURLResponse, !(200...299).contains(httpRes.statusCode) {
+            throw URLError(.badServerResponse)
         }
+    }
     
 }
 
