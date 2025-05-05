@@ -12,8 +12,8 @@ struct ParkingSpot: Identifiable, Decodable{
     var latitude: String //User latitude
     var longitude: String //User longitude
     var type: String  //“meter” or “street”
-    var legalParkingStartTime: String  //“YYYY-MM-DD HH:MM”
-    var legalParkingEndTime: String   //“YYYY-MM-DD HH:MM”
+    var start_time: String  //“YYYY-MM-DD HH:MM”
+    var end_time: String   //“YYYY-MM-DD HH:MM”
     var ifReported: Bool   //If there’s a reporting within 24 hr
     var ifAvailable: Bool // True if the last report reports empty,  False if reproted occupied
     var lastReportedAt: String   //“YYYY-MM-DD HH:MM”

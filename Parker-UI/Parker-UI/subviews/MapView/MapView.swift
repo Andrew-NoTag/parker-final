@@ -12,7 +12,7 @@ struct MapView: View {
     
     var body: some View {
         Map() {
-            Marker("Meter", coordinate: CLLocationCoordinate2D(latitude: 37.3318, longitude: -121.8863))
+            Marker("Meter", coordinate: CLLocationCoordinate2D(latitude: 40.6935, longitude: -73.9859))
         }
     }
     

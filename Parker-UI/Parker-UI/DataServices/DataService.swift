@@ -10,46 +10,45 @@ import CoreLocation
 
 struct DataService {
     
-    func parkingSpotSearch(userLocation: CLLocationCoordinate2D?) async -> [ParkingSpot] {
-        
-        //default lat long
-        var lat = 32.6514
-        var long = -161.4333
+    func parkingSpotSearch(userLocation: CLLocationCoordinate2D?, limit: Int = 50) async -> [ParkingSpot] {
+        // Default latitude and longitude
+        var lat = 40.6935
+        var long = -73.9859
         
         if let userLocation = userLocation {
             lat = userLocation.latitude
             long = userLocation.longitude
         }
         
-        var endpointUrlString = "https://placeholder/search?latitude=\(lat)&longitude=\(long)"
+        // Use the new backend endpoint
+        let endpointUrlString = "http://localhost:8000/closest-parking-lots?latitude=\(lat)&longitude=\(long)&limit=\(limit)"
         
-        //create URL
+        // Create URL
         if let url = URL(string: endpointUrlString) {
-            
-            //create request
+            // Create request
             var request = URLRequest(url: url)
+            request.httpMethod = "GET"
             
-            //send request
+            // Send request
             do {
                 let (data, response) = try await URLSession.shared.data(for: request)
                 
-                //parse the JSON
+                // Parse the JSON
                 let decoder = JSONDecoder()
-                let result = try decoder.decode(ParkingSpotSearch.self, from: data)
+                let result = try decoder.decode([ParkingSpot].self, from: data)
                 
-                return result.parkingSpots
-            }
-            catch {
-                print("Failed to fetch data")
+                // Print the result for debugging
+                print("Fetched Parking Spots: \(result)")
+                
+                return result
+            } catch {
+                print("Failed to fetch data: \(error)")
                 return []
             }
         }
         
-        return [ParkingSpot]()
-        
+        return []
     }
-    
-    
 }
 
 
