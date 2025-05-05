@@ -7,14 +7,13 @@
 
 import Foundation
 
-struct ParkingSpot: Identifiable, Decodable{
+struct ParkingSpot: Identifiable, Decodable {
     var id: String
-    var latitude: Double //User latitude
-    var longitude: Double //User longitude
-    // var type: String  //“meter” or “street”
-    // var start_time: String  //“YYYY-MM-DD HH:MM”
-    // var end_time: String   //“YYYY-MM-DD HH:MM”
-    // var ifReported: Bool   //If there’s a reporting within 24 hr
-    // var ifAvailable: Bool // True if the last report reports empty,  False if reproted occupied
-    // var lastReportedAt: String   //“YYYY-MM-DD HH:MM”
+    var latitude: Double // User latitude
+    var longitude: Double // User longitude
+    var street_name: String // Street name
+    var status: String // Status
+    var day: String? // Optional: “Monday” or “Tuesday” etc
+    var start_time: String? // Optional: “HH:MM”
+    var end_time: String? // Optional: “HH:MM”
 }

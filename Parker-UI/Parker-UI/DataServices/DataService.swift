@@ -10,10 +10,10 @@ import CoreLocation
 
 struct DataService {
     
-    func parkingSpotSearch(userLocation: CLLocationCoordinate2D?, limit: Int = 50) async -> [ParkingSpot] {
+    func parkingSpotSearch(userLocation: CLLocationCoordinate2D?, limit: Int = 200) async -> [ParkingSpot] {
         // Default latitude and longitude
-        var lat = 40.6935
-        var long = -73.9859
+        var lat = 40.631485
+        var long = -73.955025
         
         if let userLocation = userLocation {
             lat = userLocation.latitude
@@ -36,9 +36,6 @@ struct DataService {
                 // Parse the JSON
                 let decoder = JSONDecoder()
                 let result = try decoder.decode([ParkingSpot].self, from: data)
-                
-                // Print the result for debugging
-                print("Fetched Parking Spots: \(result)")
                 
                 return result
             } catch {
