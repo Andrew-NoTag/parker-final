@@ -8,6 +8,5 @@ class ParkingLot(Base):
     street_name = Column(String, nullable=False)
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
-    zip_code = Column(String, nullable=True)
-    borough = Column(String, nullable=True) 
-    last_updated = Column(DateTime, nullable=True)
+    status = Column(String, nullable=True)
+    last_updated = Column(String, nullable=True)

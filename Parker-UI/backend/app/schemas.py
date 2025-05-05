@@ -1,14 +1,14 @@
 from pydantic import BaseModel
 from datetime import datetime
+from typing import Optional
 
 class ParkingLotBase(BaseModel):
     id: int
     street_name: str 
     latitude: float
     longitude: float
-    zip_code: str | None = None  # New field
-    borough: str | None = None  # New field
-    last_updated: datetime | None = None  # New field
+    status: str
+    last_updated: Optional[str] = None
 
     class Config:
         from_attributes = True
