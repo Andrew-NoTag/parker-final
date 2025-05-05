@@ -9,10 +9,16 @@ import SwiftUI
 import MapKit
 
 struct MapView: View {
+    @Environment(ParkingSpotModel.self) var model
     
     var body: some View {
         Map() {
-            Marker("Meter", coordinate: CLLocationCoordinate2D(latitude: 40.6935, longitude: -73.9859))
+            ForEach(model.parkingSpots, id:\.id) { p in
+                Marker("Spot", coordinate: CLLocationCoordinate2D(latitude: p.latitude, longitude: p.longitude))
+                    .tag(p.id)
+                
+            }
+            
         }
     }
     

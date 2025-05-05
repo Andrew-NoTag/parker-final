@@ -8,9 +8,9 @@
 import Foundation
 
 struct ParkingSpot: Identifiable, Decodable{
-    let id = UUID()
-    var latitude: String //User latitude
-    var longitude: String //User longitude
+    var id: String
+    var latitude: Double //User latitude
+    var longitude: Double //User longitude
     var type: String  //“meter” or “street”
     var start_time: String  //“YYYY-MM-DD HH:MM”
     var end_time: String   //“YYYY-MM-DD HH:MM”
