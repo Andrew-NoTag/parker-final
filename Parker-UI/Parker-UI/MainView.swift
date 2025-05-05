@@ -36,17 +36,17 @@ struct MainView: View {
                 .tag(1)
             
             // 3) Notifications Tab
-            NotificationsView()
+            ReportView()
                 .tabItem {
-                    Image(systemName: "bell")
-                    Text("Notifications")
+                    Image(systemName: "plus.circle.fill")
+                    Text("Report a Spot")
                 }
                 .tag(2)
             
             // 4) Account Tab
-            ReportView()
+            AccountView()
                 .tabItem {
-                    Image(systemName: "plus.circle.fill")
+                    Image(systemName: "person.crop.circle")
                     Text("Report a Spot")
                 }
                 .tag(3)

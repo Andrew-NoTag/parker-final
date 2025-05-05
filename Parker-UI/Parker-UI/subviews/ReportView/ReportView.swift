@@ -1,82 +1,84 @@
-//
-//  AccountView.swift
-//  Parker-UI
-//
-//  Created by Gerald Zhao on 3/11/25.
-//
-
 import SwiftUI
-extension ParkingSpotModel: ObservableObject {}
+import CoreLocation
 
+/// View that lets a user crowd‑report an open parking spot at their current GPS position.
+/// Requires `ParkingSpotModel` in the environment and `DataService.reportOpenSpot()` async API.
 struct ReportView: View {
-    @StateObject private var model = ParkingSpotModel()
+    @Environment(ParkingSpotModel.self) private var model
     @State private var isReporting = false
-    @State private var showAlert = false
-    @State private var alertMessage = ""
-    
+    @State private var showAlert   = false
+    @State private var alertTitle  = ""
+    @State private var alertMsg    = ""
+
     var body: some View {
-        VStack(spacing: 20) {
-            
-            if model.currentUserLocation == nil {
-                ProgressView("Fetching location...")
-                    .onAppear { model.getUserLocation() }
-            } else {
-                Button(action: reportAvailability) {
-                    HStack {
-                        if isReporting {
-                            ProgressView()
-                        }
-                        Text(isReporting ? "Reporting..." : "Report Spot Available Near You")
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.accentColor.opacity(isReporting ? 0.5 : 1))
-                    .foregroundColor(.white)
-                    .cornerRadius(8)
+        VStack(spacing: 32) {
+            Image(systemName: "mappin.circle")
+                .font(.system(size: 72))
+                .foregroundColor(.accentColor)
+
+            Text("Help fellow drivers by reporting an available spot near you.")
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+
+            Button {
+                reportSpot()
+            } label: {
+                HStack {
+                    if isReporting { ProgressView() }
+                    Text(isReporting ? "Reporting…" : "Report Spot Available")
+                        .fontWeight(.bold)
                 }
-                .disabled(isReporting)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(isReporting || model.currentUserLocation == nil ? Color.gray.opacity(0.4) : Color.accentColor)
+                .foregroundColor(.white)
+                .cornerRadius(14)
             }
+            .disabled(isReporting || model.currentUserLocation == nil)
+            .padding(.horizontal)
+
+            Spacer()
         }
-        .padding()
-        .alert(isPresented: $showAlert) {
-            Alert(title: Text("Report Status"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+        .padding(.top, 60)
+        .navigationTitle("Report Availability")
+        .navigationBarTitleDisplayMode(.inline)
+        .alert(alertTitle, isPresented: $showAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(alertMsg)
+        }
+        .onAppear {
+            // ensure we have a fresh location
+            model.getUserLocation()
         }
     }
-    
-    private func reportAvailability() {
-        guard let coords = model.currentUserLocation else { return }
+
+    // MARK: - Helpers
+    private func reportSpot() {
+        guard let coord = model.currentUserLocation else {
+            alertTitle = "Location Unavailable"
+            alertMsg   = "We couldn't determine your position. Please enable location services and try again."
+            showAlert  = true
+            return
+        }
+
         isReporting = true
-        // Simple networking call; replace with your DataService if needed
-        let url = URL(string: "https://api.yourbackend.com/parking/report")!
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        let body: [String: Any] = [
-            "latitude": coords.latitude,
-            "longitude": coords.longitude,
-            "available": true
-        ]
-        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            DispatchQueue.main.async {
-                isReporting = false
-                if let error = error {
-                    alertMessage = "Failed: \(error.localizedDescription)"
-                } else {
-                    alertMessage = "Report submitted successfully!"
-                }
-                showAlert = true
+        Task {
+            do {
+                try await model.service.reportOpenSpot(latitude: coord.latitude, longitude: coord.longitude)
+                // Optional: model.earnCredits() if you add such a method
+                alertTitle = "Thank You!"
+                alertMsg   = "Your report has been submitted."
+            } catch {
+                alertTitle = "Submission Failed"
+                alertMsg   = error.localizedDescription
             }
-        }.resume()
+            isReporting = false
+            showAlert = true
+        }
     }
 }
-//// MARK: - Preview
-//struct ReportView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        ReportView()
-//    }
-//}
+
 
 #Preview {
     ReportView()
