@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 class ParkingLotBase(BaseModel):
-    id: int
+    id: str
     street_name: str 
     latitude: float
     longitude: float
@@ -17,7 +17,7 @@ class ParkingLotCreate(ParkingLotBase):
     pass
 
 class ParkingLot(ParkingLotBase):
-    id: int
+    id: str
 
     class Config:
         from_attributes = True

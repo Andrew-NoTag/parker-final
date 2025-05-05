@@ -20,6 +20,9 @@ struct MapView: View {
             }
             
         }
+        .onAppear(){
+            model.getParkingSpots()
+        }
     }
     
 }

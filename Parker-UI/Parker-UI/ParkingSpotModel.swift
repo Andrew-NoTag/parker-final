@@ -25,7 +25,7 @@ class ParkingSpotModel: NSObject, CLLocationManagerDelegate {
     override init() {
         super.init()
         
-        currentUserLocation = CLLocationCoordinate2D(latitude: 32.6514, longitude: -161.4333)
+        currentUserLocation = CLLocationCoordinate2D(latitude: 40.6935, longitude: -73.9859)
         
         locationManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
         locationManager.delegate = self
