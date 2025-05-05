@@ -15,16 +15,15 @@ import CoreLocation
  
  Created by Gerald Zhao on 3/2/25
  */
-struct MainView: View {
+struct MainView: View { 
     var body: some View {
         TabView {
             // 1) Home Tab
             MapView()
                 .tabItem {
-                    // "map" is the SF Symbol icon name here
                     Image(systemName: "map")
                     Text("Home")
-                }.shadow(radius: 10)
+                }
                 .tag(0)
             
             // 2) Search Tab
