@@ -1,5 +1,5 @@
 from .database import Base
-from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy import Column, Integer, String, Float, DateTime
 
 class ParkingLot(Base):
     __tablename__ = "parking_lots"
@@ -8,3 +8,6 @@ class ParkingLot(Base):
     street_name = Column(String, nullable=False)
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
+    zip_code = Column(String, nullable=True)
+    borough = Column(String, nullable=True) 
+    last_updated = Column(DateTime, nullable=True)
