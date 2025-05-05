@@ -1,5 +1,3 @@
-
-
 import SwiftUI
 
 //--------------------------------------------------------------
@@ -80,10 +78,10 @@ struct AccountView: View {
     //----------------------------------------------------------
     private var authFields: some View {
         VStack(spacing: 16) {
-            TextField("Phone Number", text: $inputPhone)
+            TextField("Username", text: $inputPhone)
                 .keyboardType(.phonePad)
                 .textFieldStyle(.roundedBorder)
-            SecureField("Passcode", text: $inputPass)
+            SecureField("Password", text: $inputPass)
                 .textFieldStyle(.roundedBorder)
         }
         .padding(.horizontal)
@@ -129,19 +127,19 @@ struct AccountView: View {
                 VStack {
                     HStack {
                         Text("Credits").font(.headline).foregroundColor(.accentColor)
-                        Button {
-                            showAlert = true
+                        // Button {
+                        //     showAlert = true
                             
-                        } label:{
-                            Image(systemName: "questionmark.circle").font(.title3).foregroundColor(.accentColor)
-                        }
-                        .alert(isPresented: $showAlert) {
-                            Alert(
-                                title: Text("How Credits Work"),
-                                message: Text("Each report of availabilities gives you 50 credits. Only users with 100 or more credits can see other users' reports."),
-                                dismissButton: .default(Text("OK"))
-                            )
-                        }
+                        // } label:{
+                        //     Image(systemName: "questionmark.circle").font(.title3).foregroundColor(.accentColor)
+                        // }
+                        // .alert(isPresented: $showAlert) {
+                        //     Alert(
+                        //         title: Text("How Credits Work"),
+                        //         message: Text("Each report of availabilities gives you 50 credits. Only users with 100 or more credits can see other users' reports."),
+                        //         dismissButton: .default(Text("OK"))
+                        //     )
+                        // }
                     }
                     Text("\(credits)").font(.system(size: 48, weight: .bold))
                 }
@@ -151,8 +149,8 @@ struct AccountView: View {
         List {
             Section(header: Text("Account")) {
                 HStack {
-                    Image(systemName: "phone").foregroundColor(.accentColor)
-                    Text("Phone")
+                    Image(systemName: "person.fill").foregroundColor(.accentColor)
+                    Text("Username")
                     Spacer()
                     Text(phoneNumber).foregroundColor(.secondary)
                 }
@@ -180,13 +178,18 @@ struct AccountView: View {
         isSubmitting = true
         do {
             let resp = try await service.login(phone: inputPhone, passcode: inputPass)
-            guard resp.success else { throw URLError(.userAuthenticationRequired) }
-            credits = resp.credits ?? credits
+            // Ensure the response is valid and update the state
+            if resp == nil {
+                alertMessage = "Login failed: Invalid credentials."
+                showAlert = true
+                return
+            }
             phoneNumber = inputPhone
             isLoggedIn = true
             clearFields()
         } catch {
-            alertMessage = "Login failed: \(error.localizedDescription)"
+            alertMessage = "Login failed: Unauthorized."
+            showAlert = true
         }
         isSubmitting = false
     }
@@ -195,8 +198,11 @@ struct AccountView: View {
         isSubmitting = true
         do {
             let resp = try await service.signUp(phone: inputPhone, passcode: inputPass)
-            guard resp.success else { throw URLError(.badServerResponse) }
-            credits = resp.credits ?? 0
+            if resp == false {
+                alertMessage = "Sign‑Up failed: User already exists."
+                showAlert = true
+                return
+            }
             phoneNumber = inputPhone
             isLoggedIn = true
             showSignUp = false

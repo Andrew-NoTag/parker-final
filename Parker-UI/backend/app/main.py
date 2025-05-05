@@ -7,17 +7,10 @@ from . import models, schemas
 from .database import engine, get_db
 import bcrypt
 from uuid import uuid4
+import hashlib
 
 
 app = FastAPI(title="Parking Finder API", version="1.0")
-
-
-def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
 @app.get("/")
 def read_root():
@@ -126,13 +119,10 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     if existing_user:
         raise HTTPException(status_code=400, detail="ID is already registered")
 
-    # Hash the password
-    hashed_password = hash_password(user.password)
-
     # Create a new user
     new_user = models.User(
         id=user.id,  # Use the provided ID
-        password_hash=hashed_password,
+        password_hash=user.password,
         credits=0
     )
     db.add(new_user)
@@ -146,13 +136,13 @@ from uuid import uuid4  # Add this import for generating unique user IDs
 
 @app.post("/login", response_model=schemas.UserResponse)
 def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
-    # Check if the user exists
+    # Check if the hashed ID exists in the database
     db_user = db.query(models.User).filter(models.User.id == user.id).first()
     if not db_user:
         raise HTTPException(status_code=401, detail="Invalid ID or password")
 
     # Verify the password
-    if not verify_password(user.password, db_user.password_hash):
+    if user.password != db_user.password_hash:
         raise HTTPException(status_code=401, detail="Invalid ID or password")
 
-    return db_user
+    return schemas.UserResponse(id=db_user.id, credits=db_user.credits)

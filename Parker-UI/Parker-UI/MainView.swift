@@ -47,7 +47,7 @@ struct MainView: View {
             AccountView()
                 .tabItem {
                     Image(systemName: "person.crop.circle")
-                    Text("Report a Spot")
+                    Text("Account")
                 }
                 .tag(3)
         }

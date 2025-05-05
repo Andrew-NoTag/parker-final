@@ -63,8 +63,9 @@ struct DataService {
     
     // MARK: - Auth Response ---------------------------------------------------------
         struct AuthResponse: Decodable {
+            let id: String
+            let credits: Int
             let success: Bool
-            let credits: Int?
         }
 
         // MARK: - Sign‑Up & Login helpers ----------------------------------------------
@@ -91,23 +92,33 @@ struct DataService {
         }
 
         // MARK: - User sign‑up ----------------------------------------------------------
-        func signUp(phone: String, passcode: String) async throws -> AuthResponse {
+        func signUp(phone: String, passcode: String) async throws -> Bool {
             let req = try authRequest(endpoint: "signup", phone: phone, passcode: passcode)
             let (data, resp) = try await URLSession.shared.data(for: req)
             guard let http = resp as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
                 throw URLError(.badServerResponse)
             }
-            return try JSONDecoder().decode(AuthResponse.self, from: data)
+            return true
         }
 
         // MARK: - User login ------------------------------------------------------------
-        func login(phone: String, passcode: String) async throws -> AuthResponse {
-            let req = try authRequest(endpoint: "login", phone: phone, passcode: passcode)
-            let (data, resp) = try await URLSession.shared.data(for: req)
-            guard let http = resp as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+        func login(phone: String, passcode: String) async throws -> Bool {
+            // Build the request (hashed passcode inside query parameters)
+            let request = try authRequest(endpoint: "login",
+                                        phone: phone,
+                                        passcode: passcode)
+
+            // Fire the request; we ignore the body (`_`)
+            let (_, response) = try await URLSession.shared.data(for: request)
+
+            // Validate the HTTP status code
+            guard let http = response as? HTTPURLResponse,
+                (200...299).contains(http.statusCode) else {
                 throw URLError(.badServerResponse)
             }
-            return try JSONDecoder().decode(AuthResponse.self, from: data)
+
+            // If we reach here the call succeeded
+            return true
         }
     
 }
