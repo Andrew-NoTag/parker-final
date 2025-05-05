@@ -88,15 +88,17 @@ def update_parking_status(
 ):
     # Find the closest parking lot
     closest_parking_lot = (
-        db.query(models.ParkingLot)
-        .order_by(
-            func.sqrt(
-                func.pow(models.ParkingLot.latitude - latitude, 2) +
-                func.pow(models.ParkingLot.longitude - longitude, 2)
-            )
-        )
-        .first()
+    db.query(models.ParkingLot)
+    .filter(models.ParkingLot.status != "restricted")
+    .order_by(
+        func.sqrt(
+            func.pow(models.ParkingLot.latitude - latitude, 2) +
+            func.pow(models.ParkingLot.longitude - longitude, 2)
+        ),
+        models.ParkingLot.id
     )
+    .first()
+)
 
     if not closest_parking_lot:
         raise HTTPException(status_code=404, detail="No parking lot found")
