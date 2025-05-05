@@ -31,13 +31,8 @@ cd parker-final
 ```
 ### 2. Backend Setup
 
-**a. Create a Virtual Environment**
-
-```python3
-python3 -m venv venv
-source venv/bin/activate  # On macOS/Linux
-venv\Scripts\activate     # On Windows
-```
+**a. Import Data**
+there are 3 tables in total
 
 **b. Install Dependencies**
 ```bash
