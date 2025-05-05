@@ -119,7 +119,7 @@ def update_parking_status(
     }
 
 
-@app.post("/register", response_model=schemas.UserResponse)
+@app.post("/signup", response_model=schemas.UserResponse)
 def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     # Check if the ID is already registered
     existing_user = db.query(models.User).filter(models.User.id == user.id).first()

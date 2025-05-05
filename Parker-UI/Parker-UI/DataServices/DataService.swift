@@ -78,10 +78,15 @@ struct DataService {
         private func authRequest(endpoint: String, phone: String, passcode: String) throws -> URLRequest {
             let passHash = hash(passcode)
             let phoneHash = hash(phone)
-            let urlString = "http://localhost:8000/\(endpoint)?phone=\(phoneHash)&passhash=\(passHash)"
+            let urlString = "http://localhost:8000/\(endpoint)"
             guard let url = URL(string: urlString) else { throw URLError(.badURL) }
+            
             var req = URLRequest(url: url)
-            req.httpMethod = "POST"   // use POST even though params are in URL
+            req.httpMethod = "POST"
+            req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            
+            let body: [String: String] = ["id": phoneHash, "password": passHash]
+            req.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
             return req
         }
 
