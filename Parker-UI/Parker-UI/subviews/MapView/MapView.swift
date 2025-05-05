@@ -28,5 +28,5 @@ struct MapView: View {
 }
 
 #Preview {
-    MapView()
+    MapView().environment(ParkingSpotModel())
 }

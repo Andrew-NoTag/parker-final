@@ -56,5 +56,5 @@ struct MainView: View {
 
 
 #Preview {
-    MainView()
+    MainView().environment(ParkingSpotModel())
 }
